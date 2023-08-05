@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@opengsn/contracts": "2.2.5",
+    "@openzeppelin/contracts": "^4.2.0"
+  }
+}
