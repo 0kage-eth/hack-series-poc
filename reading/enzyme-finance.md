@@ -18,6 +18,8 @@ $forge test --match-path test/EnzymeFinance.t.sol --match-path testEnzymeAttack 
 
 ## Steps in creating the attack
 
+Main test function is `testEnzymeHack` that can be found in [EnzymeFinance.t.sol](../test/EnzymeFinance.t.sol). This requires a lot of setup - make sure you follow the steps in `setUp` function.
+
     0. Setup a mainnet fork indexed to a block number just before the vulnerability was reported
     1. Get the paymaster library that had the vulnerability from etherscan & get `relayHub` and `forwarder` addresses
     2. Setup a mock recipient (`MockComptroller`) contract -> this can receive msgs from GSN network
@@ -36,16 +38,29 @@ $forge test --match-path test/EnzymeFinance.t.sol --match-path testEnzymeAttack 
 
 ---
 
+## Key contracts
+
+Key contracts used in POC are listed here
+
+    ```
+     PAYMASTER_LIB = 0x08CB94f7101F4205F5E8590518B65935AbF490f8;
+     VAULT = 0x891dee0483eBAA922E274ddD2eBBaA2D33468A38;
+     WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+     PAYMASTER_BEACON_FACTORY = 0x846bbe1925047023651de7EC289f329c24ded3a8;
+    ```
+
+---
+
 ## Key learnings
 
 1. When using external contracts, specially infrastructure contracts (relayers, bridges, oracles), make sure you know the responsibilities that the external contract has delegated to the protocol. When overriding functions of external contracts, it is likely that a protocol has forgotten to include a key check/validation. As auditors, that is a good place to focus on
 
 2. This error became critical because it combined 3 different concepts:
 
-- missing verification of trusted forwarded
-- missing check of relayer fees
-- top-up of paymaster balance in `postRelayCall`
+   - missing verification of trusted forwarded
+   - missing check of relayer fees
+   - top-up of paymaster balance in `postRelayCall`
 
-  Each of these issues is a medium impact, but combining all in the same attack vector made it critical. Always explore how different concepts can be combined to maximize the impact
+   Each of these issues is a medium impact, but combining all in the same attack vector made it critical. Always explore how different concepts can be combined to maximize the impact
 
 3. Follow the funds - the `calculateCharge` function was responsible for calculating fee payable to relay workers. Simply following payouts would have shown the missing validation of `relayFee` percentage. Trace the path of token flows and always check for max/min values of such transfers - identify any paramater that can lead to a blow-up of values somewhere in the supply chain.

@@ -908,16 +908,19 @@ contract EIP712Signature is Test {
 
 // POC Steps:
 /** Steps for exploiting the vulnerability
-    * 0. setup a mainnet fork indexed to a block number just before the vulnerability was reported
-    * 1. Get the paymaster, relayhub and trust forwarder addresses from mainnet
-    * 2. setup a recipient contract -> this can receive msgs from GSN network
-    * 3. Setup an attacker address (relay worker)& make sure relay worker is registered against a relay manager
-    * 4. Setup a custom malicious forwarder contract that will verify every message regardless of who signed it
-    * 5. deposit funds in a paymaster
-    * 6. Craft a relay request with paymasterData is true, high value for pctRelayFee
-    * 7. Relay worker signs the relay request
-    * 7. Send request via relayHub::relayCall
-    * 8. Check balances
+    0. Setup a mainnet fork indexed to a block number just before the vulnerability was reported
+    1. Get the paymaster library that had the vulnerability from etherscan & get `relayHub` and `forwarder` addresses
+    2. Setup a mock recipient (`MockComptroller`) contract -> this can receive msgs from GSN network
+    3. Setup an attacker address (relay worker)& make sure relay worker is registered against a relay manager with enough stake
+    4. Setup a custom malicious forwarder contract that will verify every message regardless of who signed it
+    5. Setup a new vault - here we used an existing vault already deployed on mainnet
+    6. Change the Beacon of the existing GsnPaymasterFactory to the vulnerable paymaster library of step 1
+    6.1 Deploy a PaymasterProxy and assign the vault address to the vault in Step 5
+    7. Fund paymaster with 0.2 Ether and make a deposit to the RelayHub
+    8. Craft a relay request with paymasterData is true, high value for pctRelayFee
+    9. Relay worker signs the relay request
+    10. Send request via relayHub::relayCall
+    11. Check balances and notice that vault balance has decreased and relay worker (attacker) balance in relayhub increases
  */
 contract EnzymeFinancePOC is Test{
 
